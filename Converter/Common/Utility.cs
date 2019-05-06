@@ -1,6 +1,7 @@
 ﻿using Converter.Enums;
 using Converter.Interfaces;
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Converter.Common
@@ -15,7 +16,7 @@ namespace Converter.Common
         private const int MINUTE = 0;
         private const int SECOND = 1;
         private const int MILLISEC = 2;
-        private const string REGEX = @"\[(PM|H1|HT|H2|FT)\][ ]{1}\d{1,2}[:]\d{2}[.]\d{3}";
+        private const string REGEX = @"\[(PM|H1|HT|H2|FT)\][ ]{1}\d{1,2}[:]\d{2}[.]\d{3}$";
         protected Period _period;
         protected string[] _minSecMillisec;
         protected string[] _overTime;
@@ -27,9 +28,29 @@ namespace Converter.Common
 
         public bool CheckMatchTimeInput(string matchTimeStr = "")
         {
-            return Regex.IsMatch(matchTimeStr, REGEX)
-                ? true
-                : false;
+            if(!Regex.IsMatch(matchTimeStr, REGEX))
+            {
+                return false;
+            }
+
+            SetPeriodAndMatchTime(matchTimeStr);
+
+            return CheckTimeAndPeriod();
+        }
+
+        private bool CheckTimeAndPeriod()
+        {
+            if(_period.Equals(Period.PRE_MATCH) && _minSecMillisec.Any(x => (Int32.Parse(x.ToString())) > 0))
+            {
+                return false;
+            }
+            
+            if(_period.Equals(Period.SECOND_HALF) && !(Int32.Parse(_minSecMillisec[MINUTE].ToString()) >= 45))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public string DisplayTime()
@@ -45,7 +66,6 @@ namespace Converter.Common
         }
         public void SetCorrectTime(string matchTimeStr)
         {
-            SetPeriodAndMatchTime(matchTimeStr);
             CheckForOvertime();
             _minSecMillisec[SECOND] = RoundUp(_minSecMillisec[SECOND], _minSecMillisec[MILLISEC]);
         }
