@@ -1,5 +1,5 @@
 # Converter
-Download/clone this solution(https://github.com/karlosredmond/Converter) into visual studio and open the .sln file. 
+Download/clone this solution(https://github.com/karlosredmond/Converter) into Visual Studio and open the .sln file. 
 Building/Debugging the project will make an API available.
 Use the API either through an API Cient tool (Postman) or the browser on: 
 http://localhost:5000/api/converter
