@@ -9,7 +9,7 @@ namespace Converter.Controllers
     {
         private IUtility _utility;
 
-        public ConverterController(IMapPeriod periodMapper, IUtility utility)
+        public ConverterController(IUtility utility)
         {
             _utility = utility;
         }

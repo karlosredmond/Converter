@@ -10,7 +10,13 @@ namespace Converter.Common
         private IMapPeriod _periodMapper;
         private const int FULL_TIME = 90;
         private const int HALF_TIME = 45;
-        protected string _period;
+        private const int PAD_LEFT = 2;
+        private const char PAD_VALUE = '0';
+        private const int MINUTE = 0;
+        private const int SECOND = 1;
+        private const int MILLISEC = 2;
+        private const string REGEX = @"\[(PM|H1|HT|H2|FT)\][ ]{1}\d{1,2}[:]\d{2}[.]\d{3}";
+        protected Period _period;
         protected string[] _minSecMillisec;
         protected string[] _overTime;
 
@@ -21,36 +27,34 @@ namespace Converter.Common
 
         public bool CheckMatchTimeInput(string matchTimeStr = "")
         {
-            return Regex.IsMatch(matchTimeStr, @"\[(PM|H1|HT|H2|FT)\][ ]{1}\d{1,2}[:]\d{2}[.]\d{3}")
+            return Regex.IsMatch(matchTimeStr, REGEX)
                 ? true
                 : false;
         }
 
         public string DisplayTime()
         {
-            if (!_overTime[0].ToString().Equals(string.Empty))
+            if (!_overTime[MINUTE].ToString().Equals(string.Empty))
             {
-                _overTime[0] = $" +{_overTime[0].PadLeft(2, '0')}:";
-                _overTime[1] = $"{_overTime[1].PadLeft(2, '0')}";
+                _overTime[MINUTE] = $" +{_overTime[MINUTE].PadLeft(PAD_LEFT, PAD_VALUE)}:";
+                _overTime[SECOND] = $"{_overTime[SECOND].PadLeft(PAD_LEFT, PAD_VALUE)}";
             } 
             
-            return string.Format($"{_minSecMillisec[0].PadLeft(2,'0')}:{_minSecMillisec[1].PadLeft(2, '0')}" +
-                    $"{_overTime[0]}{_overTime[1]} - {_periodMapper.GetPeriod(_period)}");
+            return string.Format($"{_minSecMillisec[MINUTE].PadLeft(PAD_LEFT, PAD_VALUE)}:{_minSecMillisec[SECOND].PadLeft(PAD_LEFT, PAD_VALUE)}" +
+                    $"{_overTime[MINUTE]}{_overTime[SECOND]} - {_period.ToString()}");
         }
         public void SetCorrectTime(string matchTimeStr)
         {
             SetPeriodAndMatchTime(matchTimeStr);
             CheckForOvertime();
-            _minSecMillisec[1] = RoundUp(_minSecMillisec[1], _minSecMillisec[2]);
+            _minSecMillisec[SECOND] = RoundUp(_minSecMillisec[SECOND], _minSecMillisec[MILLISEC]);
         }
 
         private string RoundUp(string second, string milli)
         {
-            if(Int32.Parse(milli[0].ToString()) >= 5)
-            {
-                second = (Int32.Parse(second) + 1).ToString();
-            }
-            return second;
+            return Int32.Parse(milli[0].ToString()) >= 5
+                    ? (Int32.Parse(second) + 1).ToString()
+                    : second;
         }
 
         private void CheckForOvertime()
@@ -58,38 +62,38 @@ namespace Converter.Common
             _overTime = _overTime ?? new string[3];
             Array.Copy(_minSecMillisec, _overTime, 3);
 
-            var minute = Int32.Parse(_minSecMillisec[0].ToString());
+            var minute = Int32.Parse(_minSecMillisec[MINUTE].ToString());
 
-            if (_periodMapper.GetPeriod(_period).Equals(Period.FIRST_HALF) && minute >= HALF_TIME)
+            if (_period.Equals(Period.FIRST_HALF) && minute >= HALF_TIME)
             {
-                _overTime[0] = $"{(Int32.Parse(_overTime[0].ToString()) - HALF_TIME).ToString()}";
-                _overTime[1] = RoundUp(_overTime[1], _overTime[2]);
+                _overTime[MINUTE] = $"{(Int32.Parse(_overTime[MINUTE].ToString()) - HALF_TIME).ToString()}";
+                _overTime[SECOND] = RoundUp(_overTime[SECOND], _overTime[MILLISEC]);
                 SetHalfTimeFullTime(HALF_TIME);
             }
-            else if (_periodMapper.GetPeriod(_period).Equals(Period.FULL_TIME) 
-                || _periodMapper.GetPeriod(_period).Equals(Period.SECOND_HALF) && minute >= FULL_TIME)
+            else if (_period.Equals(Period.FULL_TIME) 
+                || _period.Equals(Period.SECOND_HALF) && minute >= FULL_TIME)
             {
-                _overTime[0] = (Int32.Parse(_overTime[0].ToString()) - FULL_TIME).ToString();
-                _overTime[1] = RoundUp(_overTime[1], _overTime[2]);
+                _overTime[MINUTE] = (Int32.Parse(_overTime[MINUTE].ToString()) - FULL_TIME).ToString();
+                _overTime[SECOND] = RoundUp(_overTime[SECOND], _overTime[MILLISEC]);
                 SetHalfTimeFullTime(FULL_TIME);
             }
             else
             {
-                _overTime[0] = _overTime[1] = _overTime[2] = "";
+                _overTime[MINUTE] = _overTime[SECOND] = _overTime[MILLISEC] = "";
             }
         }
 
         private void SetPeriodAndMatchTime(string matchTimeStr)
         {
-            _minSecMillisec= matchTimeStr.Substring(5).Replace('.', ':').Split(':');
-            _period = matchTimeStr.Substring(0, 4);
+            _minSecMillisec = matchTimeStr.Substring(5).Replace('.', ':').Split(':');
+            _period = _periodMapper.GetPeriod(matchTimeStr.Substring(0, 4));
         }
 
         private void SetHalfTimeFullTime(int halfTimeFullTime)
         {
-            _minSecMillisec[0] = halfTimeFullTime.ToString();
-            _minSecMillisec[1] = "00";
-            _minSecMillisec[2] = "00";
+            _minSecMillisec[MINUTE] = halfTimeFullTime.ToString();
+            _minSecMillisec[SECOND] = "00";
+            _minSecMillisec[MILLISEC] = "00";
         }
     }
 }
