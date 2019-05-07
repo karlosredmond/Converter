@@ -68,6 +68,11 @@ namespace Converter.Common
         {
             CheckForOvertime();
             _minSecMillisec[SECOND] = RoundUp(_minSecMillisec[SECOND], _minSecMillisec[MILLISEC]);
+            if (Int32.Parse(_minSecMillisec[SECOND].ToString()) == 60)
+            {
+                _minSecMillisec[MINUTE] = (Int32.Parse(_minSecMillisec[MINUTE].ToString()) + 1).ToString();
+                _minSecMillisec[SECOND] = (Int32.Parse(_minSecMillisec[SECOND].ToString()) - 60).ToString();
+            }
         }
 
         private string RoundUp(string second, string milli)
