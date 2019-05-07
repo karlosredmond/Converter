@@ -16,7 +16,7 @@ namespace Converter.Common
         private const int MINUTE = 0;
         private const int SECOND = 1;
         private const int MILLISEC = 2;
-        private const string REGEX = @"\[(PM|H1|HT|H2|FT)\][ ]{1}\d{1,2}[:]\d{2}[.]\d{3}$";
+        private const string REGEX = @"\[(PM|H1|HT|H2|FT)\][ ]{1}\d{1,2}[:][0-5][0-9][.]\d{3}$";
         protected Period _period;
         protected string[] _minSecMillisec;
         protected string[] _overTime;
@@ -114,6 +114,11 @@ namespace Converter.Common
             _minSecMillisec[MINUTE] = halfTimeFullTime.ToString();
             _minSecMillisec[SECOND] = "00";
             _minSecMillisec[MILLISEC] = "00";
+            if (Int32.Parse(_overTime[SECOND].ToString()) == 60)
+            {
+                _overTime[MINUTE] = (Int32.Parse(_overTime[MINUTE].ToString()) + 1).ToString();
+                _overTime[SECOND] = (Int32.Parse(_overTime[SECOND].ToString()) - 60).ToString();
+            }
         }
     }
 }
